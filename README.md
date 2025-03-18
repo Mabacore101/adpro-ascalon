@@ -79,3 +79,8 @@ This refactoring step is important due to several reasons:
 1. Separation of Concerns. `handle_connection` now only handles connections while `generate_response` deals with response creation. This is based on Single Responsibility Principle where each method has only one responsibility.
 2. Scalability. If we want to add POST or DELETE request, we can just modify `generate_response` without actually touchy `handle_connection`.
 3. Easier Debugging. Now, since each method does only one specific thing, we can assure that a bug in connection would mean a bug in `handle_connection` and a bug in response would mean a bug in `generate_response`.
+
+# Commit 4 Reflection Notes
+
+- There's a slowdown when one window tries to access sleep endpoint and another window tries to access the main endpoint (127.0.0.1:7878). This is because the sleep endpoint will cause the server to sleep for 10 seconds and the server can't handle another response until it wakes up after 10 seconds later. This is due to the fact that the server is single threaded and will block out other request to other endpoints until the server completes the previous `/sleep` endpoint request.
+
