@@ -107,4 +107,8 @@ This refactoring step is important due to several reasons:
        Worker { id, thread }
    }
    ```
-  will command each worker to actively listen to new jobs. When a request arrives, one worker fetch that request from the queue and process it in parallel with other threads. This will prevent the sleep endpoint from blocking other requests. 
+  will command each worker to actively listen to new jobs. When a request arrives, one worker fetch that request from the queue and process it in parallel with other threads. This will prevent the sleep endpoint from blocking other requests.
+
+# Commit 6 Reflection Notes
+
+- The code after refactoring uses build instead of new, here's the difference. `ThreadPool::build(4).unwrap();` will make a thread pool with size 4 and has an error checking condition to prevent the thread pool having invalid values, like <= 0. This is important because build will not permit the execution of a thread pool with 0 or negative threads. This is a necessary check to make sure that the number of threads remains valid.
