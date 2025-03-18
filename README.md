@@ -84,3 +84,27 @@ This refactoring step is important due to several reasons:
 
 - There's a slowdown when one window tries to access sleep endpoint and another window tries to access the main endpoint (127.0.0.1:7878). This is because the sleep endpoint will cause the server to sleep for 10 seconds and the server can't handle another response until it wakes up after 10 seconds later. This is due to the fact that the server is single threaded and will block out other request to other endpoints until the server completes the previous `/sleep` endpoint request.
 
+# Commit 5 Reflection Notes
+
+- The code is now multithreaded after refactoring due to the presence of `ThreadPool`, here's how it works. First, `let pool = ThreadPool::new(4);
+` will create a new thread pool with 4 worker threads. Instead of handling everything on 1 thread, the server now has 4 threads to process requests. Second, the work are evenly distributed between threads with this code segment:
+   ```
+   for stream in listener.incoming() {
+    let stream = stream.unwrap();
+    pool.execute(|| {
+        handle_connection(stream);
+    });
+   }
+   ```
+  Now the server will pass requests to the thread pool rather than the main thread directly. This will allow the thread pool to manage which thread receive which request. Finally, this segment of the code:
+   ```
+   fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
+       let thread = thread::spawn(move || loop {
+           let job = receiver.lock().unwrap().recv().unwrap();
+           println!("Worker {id} got a job; executing.");
+           job();
+       });
+       Worker { id, thread }
+   }
+   ```
+  will command each worker to actively listen to new jobs. When a request arrives, one worker fetch that request from the queue and process it in parallel with other threads. This will prevent the sleep endpoint from blocking other requests. 
